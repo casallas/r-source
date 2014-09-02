@@ -23,6 +23,13 @@
 
 profiler <- function(fitted, ...) UseMethod("profiler")
 
+getBound <- function(fittedModel, bound){
+  if(!is.null(bound))
+    as.double(eval(bound, envir=fittedModel$getEnv()))
+  else
+    Inf
+}
+
 profiler.nls <- function(fitted, ...)
 {
     fittedModel <- fitted$m
@@ -31,10 +38,10 @@ profiler.nls <- function(fitted, ...)
     trace <- fitted$call$trace
     defaultPars <- fittedPars <- fittedModel$getPars()
     lower <- fitted$call$lower
-    lower <- rep_len(if(!is.null(lower)) as.double(lower) else Inf,
+    lower <- rep_len(getBound(fittedModel, lower),
                      length(defaultPars))
     upper <- fitted$call$upper
-    upper <- rep_len(if(!is.null(upper)) as.double(upper) else Inf,
+    upper <- rep_len(getBound(fittedModel, upper),
                      length(defaultPars))
     defaultVary <- rep.int(TRUE, length(defaultPars))
     S.hat <- deviance(fitted) # need to allow for weights
@@ -137,9 +144,9 @@ profile.nls <-
     pars <- prof$getFittedPars()
     npar <- length(pars)  # less in a partially linear model
     lower <- fitted$call$lower
-    lower <- rep_len(if(!is.null(lower)) as.double(lower) else -Inf, npar)
+    lower <- rep_len(getBound(fitted$m, lower), npar)
     upper <- fitted$call$upper
-    upper <- rep_len(if(!is.null(upper)) as.double(upper) else Inf, npar)
+    upper <- rep_len(getBound(fitted$m, upper), npar)
     if(is.character(which)) which <- match(which, names(pars), 0)
     which <- which[which >= 1 & which <= npar]
     ## was 'npar' - length(which) would have made more sense
